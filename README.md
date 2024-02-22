@@ -1,5 +1,7 @@
 # Dotnet JSON Reporter
 
+> Save MSTest Nunit Xunit test results as a JSON file
+
 A Dotnet MSTest Nunit Xunit JSON test reporter to create test reports that follow the CTRF standard.
 
 [Common Test Report Format](https://ctrf.io) ensures the generation of uniform JSON test reports, independent of programming languages or test framework in use.
