@@ -6,16 +6,6 @@ A Dotnet MSTest Nunit Xunit JSON test reporter to create test reports that follo
 
 [Common Test Report Format](https://ctrf.io) ensures the generation of uniform JSON test reports, independent of programming languages or test framework in use.
 
-⭐ **If you find this project useful, consider giving it a GitHub star** ⭐
-
-It means a lot to us and helps us grow this open source library.
-
-## We need your help
-
-We believe CTRF can save **a lot** of time for engineers, a single data serialisation report, well structured, community driven and works with any framework. For over 30s years software engineers have used a de facto data serialisation report, you know the one! But we feel it’s time to modernise.
-
-The only way we can grow CTRF is with your help and the support of the software engineering community.
-
 ## Help us grow CTRF
 
 ⭐ **If you find this project useful, please consider following the [CTRF organisation](https://github.com/ctrf-io) and giving this repository a star** ⭐
