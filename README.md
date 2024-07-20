@@ -16,17 +16,11 @@ We believe CTRF can save **a lot** of time for engineers, a single data serialis
 
 The only way we can grow CTRF is with your help and the support of the software engineering community.
 
-## How can you help?
+## Help us grow CTRF
 
-- Join and build with us! We are looking for [contributors](https://github.com/ctrf-io), get involved in this early stage project. All contributions are welcome.
-- Give this repository a star ⭐⭐⭐⭐⭐⭐
-- Follow the CTRF [GitHub organisation](https://github.com/ctrf-io)
-- Clap for our medium articles (30 times each) 👏
-- Share, share share! Discord, Reddit, Twitter, LinkedIn, Slack, Teams, whereever! - please share our [libraries](https://github.com/orgs/ctrf-io/repositories), our [homepage](https://www.ctrf.io/), our [Medium articles](https://medium.com/@ma11hewthomas)
-- Maybe even write a blog about us!
-- Try our [tools](https://github.com/orgs/ctrf-io/repositories)
+⭐ **If you find this project useful, please consider following the [CTRF organisation](https://github.com/ctrf-io) and giving this repository a star** ⭐
 
-**Thank you so much!!**
+**It means a lot to us and helps us grow this open source library.**
 
 ## Features
 
