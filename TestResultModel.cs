@@ -14,9 +14,12 @@ namespace DotnetCtrfJsonReporter
 
     public class TestModel
     {
-        public string Name { get; set; }
-        public string Status { get; set; }
-        public long Duration { get; set; }
+        public required string Name { get; set; }
+        public required string Status { get; set; }
+        public required long Duration { get; set; }
+
+        public string? Message { get; set; }
+        public string? Trace { get; set; }
     }
 
     public class ToolModel
