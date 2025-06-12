@@ -127,13 +127,15 @@ dotnet tool run DotnetCtrfJsonReporter \
 
 ## Test Object Properties
 
-The test object in the report includes the following [CTRF properties](https://ctrf.io/docs/schema/test):
+The test object in the report includes the following [CTRF properties](https://ctrf.io/docs/specification/test):
 
 | Name       | Type   | Required | Details                                                                             |
 | ---------- | ------ | -------- | ----------------------------------------------------------------------------------- |
 | `name`     | String | Required | The name of the test.                                                               |
 | `status`   | String | Required | The outcome of the test. One of: `passed`, `failed`, `skipped`, `pending`, `other`. |
 | `duration` | Number | Required | The time taken for the test execution, in milliseconds.                             |
+| `message`  | String | Optional | A descriptive message or note associated with the test result.                      |
+| `trace`    | String | Optional | The stack trace captured if the test failed.                                        |
 
 ## Support Us
 
