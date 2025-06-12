@@ -42,9 +42,9 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
       "name": "mstest"
     },
     "summary": {
-      "tests": 1,
+      "tests": 2,
       "passed": 1,
-      "failed": 0,
+      "failed": 1,
       "pending": 0,
       "skipped": 0,
       "other": 0,
@@ -55,7 +55,25 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
       {
         "name": "ctrf should generate the same report with any tool",
         "status": "passed",
-        "duration": 100
+        "duration": 100,
+        "start": 1706828654500,
+        "stop": 1706828654600,
+        "suite": "UnitTests",
+        "rawStatus": "Passed",
+        "filePath": "/path/to/test.cs"
+      },
+      {
+        "name": "failing test example",
+        "status": "failed",
+        "duration": 50,
+        "start": 1706828654600,
+        "stop": 1706828654650,
+        "suite": "UnitTests",
+        "message": "Expected: True\nActual: False",
+        "trace": "   at FailingTest() in /path/to/test.cs:line 42",
+        "line": 42,
+        "rawStatus": "Failed",
+        "filePath": "/path/to/test.cs"
       }
     ],
     "environment": {
@@ -129,11 +147,19 @@ dotnet tool run DotnetCtrfJsonReporter \
 
 The test object in the report includes the following [CTRF properties](https://ctrf.io/docs/schema/test):
 
-| Name       | Type   | Required | Details                                                                             |
-| ---------- | ------ | -------- | ----------------------------------------------------------------------------------- |
-| `name`     | String | Required | The name of the test.                                                               |
-| `status`   | String | Required | The outcome of the test. One of: `passed`, `failed`, `skipped`, `pending`, `other`. |
-| `duration` | Number | Required | The time taken for the test execution, in milliseconds.                             |
+| Name         | Type   | Required | Details                                                                             |
+| ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `name`       | String | Required | The name of the test.                                                               |
+| `status`     | String | Required | The outcome of the test. One of: `passed`, `failed`, `skipped`, `pending`, `other`. |
+| `duration`   | Number | Required | The time taken for the test execution, in milliseconds.                             |
+| `start`      | Number | Optional | Test start time as epoch milliseconds.                                              |
+| `stop`       | Number | Optional | Test end time as epoch milliseconds.                                                |
+| `suite`      | String | Optional | The test suite or class name (extracted from TestMethod className).                |
+| `message`    | String | Optional | Error message for failed tests. Only included when the test fails.                 |
+| `trace`      | String | Optional | Stack trace for failed tests. Only included when the test fails.                   |
+| `line`       | Number | Optional | Line number where the test failure occurred (extracted from stack trace).          |
+| `rawStatus`  | String | Optional | Original TRX outcome status (e.g., "Passed", "Failed", "NotExecuted").             |
+| `filePath`   | String | Optional | Path to the test source file (extracted from stack trace or codeBase).            |
 
 ## Support Us
 
