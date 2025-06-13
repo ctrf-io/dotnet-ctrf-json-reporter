@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace DotnetCtrfJsonReporter
 {
     public class TestResultsModel
@@ -18,7 +20,10 @@ namespace DotnetCtrfJsonReporter
         public required string Status { get; set; }
         public required long Duration { get; set; }
 
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? Message { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? Trace { get; set; }
     }
 
