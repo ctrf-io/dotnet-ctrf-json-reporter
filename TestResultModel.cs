@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace DotnetCtrfJsonReporter
 {
     public class TestResultsModel
@@ -14,9 +16,15 @@ namespace DotnetCtrfJsonReporter
 
     public class TestModel
     {
-        public string Name { get; set; }
-        public string Status { get; set; }
-        public long Duration { get; set; }
+        public required string Name { get; set; }
+        public required string Status { get; set; }
+        public required long Duration { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? Message { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? Trace { get; set; }
     }
 
     public class ToolModel

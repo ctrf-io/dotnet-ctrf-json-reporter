@@ -13,12 +13,16 @@ namespace DotnetCtrfJsonReporter
             {
                 var durationString = testResult.Attribute("duration")?.Value ?? "00:00:00";
                 var totalMilliseconds = ParseTotalMilliseconds(durationString);
+                var errorInfo = GetErrorInfo(testResult);
 
                 var testModel = new TestModel
                 {
                     Name = testResult.Attribute("testName")?.Value,
                     Status = StatusMapper.MapToCtrfStatus(testResult.Attribute("outcome")?.Value),
-                    Duration = totalMilliseconds
+                    Duration = totalMilliseconds,
+
+                    Message = errorInfo?.Message,
+                    Trace = errorInfo?.Trace,
                 };
 
                 testModels.Add(testModel);
@@ -41,5 +45,21 @@ namespace DotnetCtrfJsonReporter
 
             return (hours * 3600000) + (minutes * 60000) + (seconds * 1000) + milliseconds;
         }
+
+        private static ErrorInfo? GetErrorInfo(XElement testResult)
+        {
+            var errorInfo = testResult.Descendants().Where(x => x.Name.LocalName == "ErrorInfo").FirstOrDefault();
+            if (errorInfo is null)
+            {
+                return null;
+            }
+
+            var message = errorInfo.Descendants().Where(x => x.Name.LocalName == "Message").FirstOrDefault();
+            var trace = errorInfo.Descendants().Where(x => x.Name.LocalName == "StackTrace").FirstOrDefault();
+
+            return new(message?.Value, trace?.Value);
+        }
+
+        private record ErrorInfo(string? Message, string? Trace);
     }
 }
