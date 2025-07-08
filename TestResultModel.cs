@@ -1,9 +1,15 @@
 using Newtonsoft.Json;
+using System.Reflection;
 
 namespace DotnetCtrfJsonReporter
 {
     public class TestResultsModel
     {
+        public string SpecVersion => "0.0.0";
+        public string ReportId => Guid.NewGuid().ToString();
+        public string Timestamp => $"{DateTime.UtcNow:O}";
+        public string ReportFormat => "CTRF";
+        public string GeneratedBy => "dotnet-ctrf-json-reporter";
         public ResultsModel Results { get; set; } = new ResultsModel();
     }
 
