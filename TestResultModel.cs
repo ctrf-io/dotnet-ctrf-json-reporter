@@ -5,11 +5,11 @@ namespace DotnetCtrfJsonReporter
 {
     public class TestResultsModel
     {
-        public static string SpecVersion => Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString() ?? "0.0.0";
-        public static string ReportId => Guid.NewGuid().ToString();
-        public static string Timestamp => $"{DateTime.UtcNow:O}";
-        public static string ReportFormat => "CTRF";
-        public static string GeneratedBy => Assembly.GetExecutingAssembly()?.GetName().Name ?? "ctrf-json-reporter";
+        public string SpecVersion => "0.0.0";
+        public string ReportId => Guid.NewGuid().ToString();
+        public string Timestamp => $"{DateTime.UtcNow:O}";
+        public string ReportFormat => "CTRF";
+        public string GeneratedBy => "dotnet-ctrf-json-reporter";
         public ResultsModel Results { get; set; } = new ResultsModel();
     }
 
