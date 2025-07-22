@@ -145,21 +145,21 @@ dotnet tool run DotnetCtrfJsonReporter \
 
 ## Test Object Properties
 
-The test object in the report includes the following [CTRF properties](https://ctrf.io/docs/schema/test):
+The test object in the report includes the following [CTRF properties](https://ctrf.io/docs/specification/test):
 
 | Name         | Type   | Required | Details                                                                             |
 | ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
 | `name`       | String | Required | The name of the test.                                                               |
 | `status`     | String | Required | The outcome of the test. One of: `passed`, `failed`, `skipped`, `pending`, `other`. |
 | `duration`   | Number | Required | The time taken for the test execution, in milliseconds.                             |
+| `message`  | String | Optional | A descriptive message or note associated with the test result.                        |
+| `trace`    | String | Optional | The stack trace captured if the test failed.                                          |
 | `start`      | Number | Optional | Test start time as epoch milliseconds.                                              |
 | `stop`       | Number | Optional | Test end time as epoch milliseconds.                                                |
-| `suite`      | String | Optional | The test suite or class name (extracted from TestMethod className).                |
-| `message`    | String | Optional | Error message for failed tests. Only included when the test fails.                 |
-| `trace`      | String | Optional | Stack trace for failed tests. Only included when the test fails.                   |
-| `line`       | Number | Optional | Line number where the test failure occurred (extracted from stack trace).          |
-| `rawStatus`  | String | Optional | Original TRX outcome status (e.g., "Passed", "Failed", "NotExecuted").             |
-| `filePath`   | String | Optional | Path to the test source file (extracted from stack trace or codeBase).            |
+| `suite`      | String | Optional | The test suite or class name (extracted from TestMethod className).                 |
+| `line`       | Number | Optional | Line number where the test failure occurred (extracted from stack trace).           |
+| `rawStatus`  | String | Optional | Original TRX outcome status (e.g., "Passed", "Failed", "NotExecuted").              |
+| `filePath`   | String | Optional | Path to the test source file (extracted from stack trace or codeBase).              |
 
 ## Support Us
 

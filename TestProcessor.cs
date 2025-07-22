@@ -129,5 +129,21 @@ namespace DotnetCtrfJsonReporter
 
             return (hours * 3600000) + (minutes * 60000) + (seconds * 1000) + milliseconds;
         }
+
+        private static ErrorInfo? GetErrorInfo(XElement testResult)
+        {
+            var errorInfo = testResult.Descendants().Where(x => x.Name.LocalName == "ErrorInfo").FirstOrDefault();
+            if (errorInfo is null)
+            {
+                return null;
+            }
+
+            var message = errorInfo.Descendants().Where(x => x.Name.LocalName == "Message").FirstOrDefault();
+            var trace = errorInfo.Descendants().Where(x => x.Name.LocalName == "StackTrace").FirstOrDefault();
+
+            return new(message?.Value, trace?.Value);
+        }
+
+        private record ErrorInfo(string? Message, string? Trace);
     }
 }

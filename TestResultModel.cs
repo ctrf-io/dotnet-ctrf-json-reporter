@@ -1,7 +1,15 @@
+using Newtonsoft.Json;
+using System.Reflection;
+
 namespace DotnetCtrfJsonReporter
 {
     public class TestResultsModel
     {
+        public string SpecVersion => "0.0.0";
+        public string ReportId => Guid.NewGuid().ToString();
+        public string Timestamp => $"{DateTime.UtcNow:O}";
+        public string ReportFormat => "CTRF";
+        public string GeneratedBy => "dotnet-ctrf-json-reporter";
         public ResultsModel Results { get; set; } = new ResultsModel();
     }
 
@@ -17,13 +25,29 @@ namespace DotnetCtrfJsonReporter
         public string Name { get; set; }
         public string Status { get; set; }
         public long Duration { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public long? Start { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public long? Stop { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? Suite { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? Message { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? Trace { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? Line { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? RawStatus { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? FilePath { get; set; }
     }
 
