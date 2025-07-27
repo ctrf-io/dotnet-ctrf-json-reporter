@@ -22,15 +22,33 @@ namespace DotnetCtrfJsonReporter
 
     public class TestModel
     {
-        public required string Name { get; set; }
-        public required string Status { get; set; }
-        public required long Duration { get; set; }
-
+        public string Name { get; set; }
+        public string Status { get; set; }
+        public long Duration { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public long? Start { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public long? Stop { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? Suite { get; set; }
+        
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? Message { get; set; }
-
+        
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? Trace { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? Line { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? RawStatus { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? FilePath { get; set; }
     }
 
     public class ToolModel
