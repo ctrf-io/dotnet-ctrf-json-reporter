@@ -1,20 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Authors>Matthew Thomas</Authors>
     <PackageId>DotnetCtrfJsonReporter</PackageId>
     <OutputType>Exe</OutputType>
     <PackAsTool>true</PackAsTool>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>0.0.5</Version>
+    <Version>0.0.7</Version>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://ctrf.io</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/ctrf-io/DotnetCtrfJsonReporter</RepositoryUrl>
+    <RepositoryUrl>https://github.com/ctrf-io/dotnet-ctrf-json-reporter</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-
+    <PackageTags>ctrf test-report test-reporting</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
