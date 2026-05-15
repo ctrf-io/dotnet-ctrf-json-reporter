@@ -62,7 +62,7 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
         "rawStatus": "Passed",
         "filePath": "/path/to/test.cs",
         "stdout": [
-          This is standard output text.
+          "This is standard output text."
         ]
       },
       {
@@ -78,7 +78,7 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
         "rawStatus": "Failed",
         "filePath": "/path/to/test.cs",
         "stdout": [
-          This is standard output text.
+          "This is standard output text."
         ]
       }
     ],
