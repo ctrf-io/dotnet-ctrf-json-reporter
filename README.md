@@ -60,7 +60,10 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
         "stop": 1706828654600,
         "suite": "UnitTests",
         "rawStatus": "Passed",
-        "filePath": "/path/to/test.cs"
+        "filePath": "/path/to/test.cs",
+        "stdout": [
+          This is standard output text.
+        ]
       },
       {
         "name": "failing test example",
@@ -73,7 +76,10 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
         "trace": "   at FailingTest() in /path/to/test.cs:line 42",
         "line": 42,
         "rawStatus": "Failed",
-        "filePath": "/path/to/test.cs"
+        "filePath": "/path/to/test.cs",
+        "stdout": [
+          This is standard output text.
+        ]
       }
     ],
     "environment": {
@@ -118,7 +124,7 @@ dotnet test --logger "trx;logfilename=testResults.trx"
 After the tests have completed, run DotnetCtrfJsonReporter to convert the TRX file into a CTRF:
 
 ```bash
-dotnet tool run DotnetCtrfJsonReporter -t "TestResults/testResults.trx"
+dotnet tool run DotnetCtrfJsonReporter -p "TestResults/testResults.trx"
 ```
 
 You'll find a JSON file named `ctrf-report.json` in the `ctrf` directory.
@@ -160,6 +166,7 @@ The test object in the report includes the following [CTRF properties](https://c
 | `line`       | Number | Optional | Line number where the test failure occurred (extracted from stack trace).           |
 | `rawStatus`  | String | Optional | Original TRX outcome status (e.g., "Passed", "Failed", "NotExecuted").              |
 | `filePath`   | String | Optional | Path to the test source file (extracted from stack trace or codeBase).              |
+| `stdout`   | String[] | Optional | Lines of standard output generated during test execution.                           |
 
 ## Support Us
 
