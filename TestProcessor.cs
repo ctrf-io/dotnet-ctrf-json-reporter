@@ -24,7 +24,8 @@ namespace DotnetCtrfJsonReporter
                     Name = testResult.Attribute("testName")?.Value ?? string.Empty,
                     Status = StatusMapper.MapToCtrfStatus(testResult.Attribute("outcome")?.Value ?? string.Empty),
                     Duration = totalMilliseconds,
-                    RawStatus = testResult.Attribute("outcome")?.Value
+                    RawStatus = testResult.Attribute("outcome")?.Value,
+                    Stdout =  testResult.Descendants().FirstOrDefault(d => d.Name.LocalName == "StdOut")?.Value.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
                 };
 
                 // Extract timing information

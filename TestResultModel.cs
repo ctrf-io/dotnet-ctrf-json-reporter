@@ -49,6 +49,9 @@ namespace DotnetCtrfJsonReporter
         
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? FilePath { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string[]? Stdout { get; set; }
     }
 
     public class ToolModel
