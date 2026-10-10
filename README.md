@@ -37,6 +37,11 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
 
 ```json
 {
+  "reportFormat": "CTRF",
+  "specVersion": "0.2.0",
+  "reportId": "73d880a2-3d3b-4d2c-a9aa-3f2774269457",
+  "timestamp": "2026-10-05T10:00:00Z",
+  "generatedBy": "dotnet-ctrf-json-reporter",
   "results": {
     "tool": {
       "name": "mstest"
@@ -58,7 +63,7 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
         "duration": 100,
         "start": 1706828654500,
         "stop": 1706828654600,
-        "suite": "UnitTests",
+        "suite": ["Example", "Tests", "UnitTests"],
         "rawStatus": "Passed",
         "filePath": "/path/to/test.cs",
         "stdout": [
@@ -71,7 +76,7 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
         "duration": 50,
         "start": 1706828654600,
         "stop": 1706828654650,
-        "suite": "UnitTests",
+        "suite": ["Example", "Tests", "UnitTests"],
         "message": "Expected: True\nActual: False",
         "trace": "   at FailingTest() in /path/to/test.cs:line 42",
         "line": 42,
@@ -81,12 +86,7 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
           "This is standard output text."
         ]
       }
-    ],
-    "environment": {
-      "appName": "MyApp",
-      "buildName": "MyBuild",
-      "buildNumber": "1"
-    }
+    ]
   }
 }
 ```
@@ -151,23 +151,79 @@ dotnet tool run DotnetCtrfJsonReporter \
 
 ## Test Object Properties
 
-The test object in the report includes the following [CTRF properties](https://ctrf.io/docs/specification/test):
+Reports target **CTRF specification 0.2.0**. The test object includes the following [CTRF properties](https://ctrf.io/docs/specification/test):
 
 | Name         | Type   | Required | Details                                                                             |
 | ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
 | `name`       | String | Required | The name of the test.                                                               |
 | `status`     | String | Required | The outcome of the test. One of: `passed`, `failed`, `skipped`, `pending`, `other`. |
-| `duration`   | Number | Required | The time taken for the test execution, in milliseconds.                             |
+| `duration`   | Integer | Required | The time taken for the test execution, in milliseconds.                             |
 | `message`  | String | Optional | A descriptive message or note associated with the test result.                        |
 | `trace`    | String | Optional | The stack trace captured if the test failed.                                          |
-| `start`      | Number | Optional | Test start time as epoch milliseconds.                                              |
-| `stop`       | Number | Optional | Test end time as epoch milliseconds.                                                |
-| `suite`      | String | Optional | The test suite or class name (extracted from TestMethod className).                 |
-| `line`       | Number | Optional | Line number where the test failure occurred (extracted from stack trace).           |
+| `start`      | Integer | Optional | Test start time as epoch milliseconds.                                              |
+| `stop`       | Integer | Optional | Test end time as epoch milliseconds.                                                |
+| `suite`      | String[] | Optional | Namespace components followed by the class name, ordered from outermost to innermost.                 |
+| `line`       | Integer | Optional | Line number where the test failure occurred (extracted from stack trace).           |
 | `rawStatus`  | String | Optional | Original TRX outcome status (e.g., "Passed", "Failed", "NotExecuted").              |
-| `filePath`   | String | Optional | Path to the test source file (extracted from stack trace or codeBase).              |
+| `filePath`   | String | Optional | Source file path from the stack trace or a source-file codeBase; compiled assembly paths are omitted.              |
 | `stdout`   | String[] | Optional | Lines of standard output generated during test execution.                           |
+
+## CTRF 0.2.0 compatibility
+
+This update changes existing report properties. Consumers should migrate as follows:
+
+- Read `suite` as an array: `"UnitTests"` becomes `["Example", "Tests", "UnitTests"]`
+  for `className="Example.Tests.UnitTests"`. Assembly qualifiers are removed.
+- Reports declare `specVersion: "0.2.0"`. `reportId` and `timestamp` are assigned
+  once per report instance and remain stable when that instance is serialized again.
+- Durations are parsed as invariant TRX TimeSpans and truncated to whole milliseconds.
+  Fractional seconds and durations spanning days are supported without 32-bit overflow.
+  If duration is absent, it is derived from test timestamps when both are available,
+  otherwise it is `0`. Malformed or negative durations fail conversion.
+- Timestamps respect explicit offsets. Offset-free timestamps are interpreted as UTC.
+  Missing or unparseable test timestamps are omitted. Missing or unparseable run
+  timestamps use the earliest/latest available test timestamp. With no test timestamps,
+  start defaults to `0` and stop defaults to start. Reversed intervals fail conversion.
+- `Passed` maps to `passed`; `Failed`, `Error`, `Timeout`, and `Aborted` map to
+  `failed`; `NotExecuted` maps to `skipped`; `Pending` maps to `pending`.
+  Other or missing outcomes map to `other`. Summary counts follow these normalized
+  results, and `rawStatus` preserves the original outcome when present.
+- `filePath` identifies a source file. A DLL or executable in `codeBase` is omitted.
+  Source `codeBase` paths ending in `.cs`, `.vb`, `.fs`, or `.fsx` are retained;
+  a stack-trace source location takes precedence. `line` remains the location
+  extracted from that trace.
+- `stdout` splits LF, CRLF, and CR line endings on every platform and preserves
+  blank lines. Unavailable optional properties are omitted.
+- Missing test names fall back to the definition name, method name, then TRX test ID.
+  A result with none of these, or an empty test-tool name, fails conversion with a
+  nonzero exit code and does not write a new report.
+
+Validate a generated report with the CTRF CLI:
+
+```bash
+npx ctrf-cli@0.5.0 validate-strict ctrf/ctrf-report.json --spec-version 0.2.0
+```
+
+## Local verification
+
+Requires the .NET 8 SDK and Node.js 20.19 or newer. Restore and build the tool,
+then run the regression checks, including strict CTRF CLI validation:
+
+```bash
+dotnet build -c Release
+node tests/verify.mjs
+```
+
+The regression runner uses `ctrf-cli@0.5.0` through npx by default. To use a
+locally built CLI, set `CTRF_CLI` to its `dist/cli.js` path. Set `DOTNET_COMMAND`
+if the SDK executable is outside PATH. Fixtures exercise existing properties,
+all outcome categories, missing metadata, timing precision, timezone independence,
+source locations, malformed inputs, and rejection of the old string-valued suite.
 
 ## Support Us
 
 If you find this project useful, consider giving it a GitHub star ⭐ It means a lot to us.
+
+## Identity and lineage
+
+TRX conversions generate a UUID `reportId`, retain the source TestRun ID as `runId` and the source execution ID as `executionId` when available, and generate missing run/execution IDs. Stable logical `testId` values derive from fully qualified method, assembly filename and test display name, avoiding checkout-root paths and transient TRX definition IDs. Use `--run-id` and `--shard-id` to coordinate conversions from one run; values must be non-empty. TRX retry history and attachment references are not currently emitted, so no attempt or attachment IDs are synthesized.

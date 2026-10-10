@@ -1,13 +1,13 @@
 using Newtonsoft.Json;
-using System.Reflection;
 
 namespace DotnetCtrfJsonReporter
 {
     public class TestResultsModel
     {
-        public string SpecVersion => "0.0.0";
-        public string ReportId => Guid.NewGuid().ToString();
-        public string Timestamp => $"{DateTime.UtcNow:O}";
+        public string SpecVersion => "0.2.0";
+        public string RunId { get; set; } = Guid.NewGuid().ToString();
+        public string ReportId { get; } = Guid.NewGuid().ToString();
+        public string Timestamp { get; } = DateTime.UtcNow.ToString("O");
         public string ReportFormat => "CTRF";
         public string GeneratedBy => "dotnet-ctrf-json-reporter";
         public ResultsModel Results { get; set; } = new ResultsModel();
@@ -15,38 +15,47 @@ namespace DotnetCtrfJsonReporter
 
     public class ResultsModel
     {
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public EnvironmentModel? Environment { get; set; }
         public ToolModel Tool { get; set; } = new ToolModel();
         public SummaryModel Summary { get; set; } = new SummaryModel();
         public List<TestModel> Tests { get; set; } = new List<TestModel>();
     }
 
+    public class EnvironmentModel
+    {
+        public string ShardId { get; set; } = string.Empty;
+    }
+
     public class TestModel
     {
-        public string Name { get; set; }
-        public string Status { get; set; }
+        public string TestId { get; set; } = string.Empty;
+        public string ExecutionId { get; set; } = Guid.NewGuid().ToString();
+        public string Name { get; set; } = string.Empty;
+        public string Status { get; set; } = "other";
         public long Duration { get; set; }
-        
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public long? Start { get; set; }
-        
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public long? Stop { get; set; }
-        
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string? Suite { get; set; }
-        
+        public string[]? Suite { get; set; }
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? Message { get; set; }
-        
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? Trace { get; set; }
-        
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? Line { get; set; }
-        
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? RawStatus { get; set; }
-        
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? FilePath { get; set; }
 
@@ -56,7 +65,7 @@ namespace DotnetCtrfJsonReporter
 
     public class ToolModel
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 
     public class SummaryModel
