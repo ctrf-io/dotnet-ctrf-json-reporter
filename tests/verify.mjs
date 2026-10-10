@@ -93,6 +93,7 @@ try {
   reject('empty-shard-id', identityXml, ['--shard-id', ' ']);
 
   const empty = convert('empty', wrap());
+  assert.equal('runId' in empty, false);
   assert.equal(empty.results.summary.start, 0);
   assert.equal(empty.results.summary.stop, 0);
   assert.equal(empty.results.tool.name, 'dotnet');

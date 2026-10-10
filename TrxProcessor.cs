@@ -33,7 +33,7 @@ namespace DotnetCtrfJsonReporter
 
             return new TestResultsModel
             {
-                RunId = trxReport.Root?.Attribute("id")?.Value is string sourceRun && !string.IsNullOrWhiteSpace(sourceRun) ? sourceRun : Guid.NewGuid().ToString(),
+                RunId = trxReport.Root?.Attribute("id")?.Value is string sourceRun && !string.IsNullOrWhiteSpace(sourceRun) ? sourceRun : null,
                 Results = new ResultsModel
                 {
                     Tool = new ToolModel { Name = "dotnet" },

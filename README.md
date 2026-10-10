@@ -223,7 +223,3 @@ source locations, malformed inputs, and rejection of the old string-valued suite
 ## Support Us
 
 If you find this project useful, consider giving it a GitHub star ⭐ It means a lot to us.
-
-## Identity and lineage
-
-TRX conversions generate a UUID `reportId`, retain the source TestRun ID as `runId` and the source execution ID as `executionId` when available, and generate missing run/execution IDs. Stable logical `testId` values derive from fully qualified method, assembly filename and test display name, avoiding checkout-root paths and transient TRX definition IDs. Use `--run-id` and `--shard-id` to coordinate conversions from one run; values must be non-empty. TRX retry history and attachment references are not currently emitted, so no attempt or attachment IDs are synthesized.

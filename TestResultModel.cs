@@ -5,7 +5,8 @@ namespace DotnetCtrfJsonReporter
     public class TestResultsModel
     {
         public string SpecVersion => "0.2.0";
-        public string RunId { get; set; } = Guid.NewGuid().ToString();
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? RunId { get; set; }
         public string ReportId { get; } = Guid.NewGuid().ToString();
         public string Timestamp { get; } = DateTime.UtcNow.ToString("O");
         public string ReportFormat => "CTRF";
