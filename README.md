@@ -168,57 +168,10 @@ Reports target **CTRF specification 0.2.0**. The test object includes the follow
 | `filePath`   | String | Optional | Source file path from the stack trace or a source-file codeBase; compiled assembly paths are omitted.              |
 | `stdout`   | String[] | Optional | Lines of standard output generated during test execution.                           |
 
-## CTRF 0.2.0 compatibility
-
-This update changes existing report properties. Consumers should migrate as follows:
-
-- Read `suite` as an array: `"UnitTests"` becomes `["Example", "Tests", "UnitTests"]`
-  for `className="Example.Tests.UnitTests"`. Assembly qualifiers are removed.
-- Reports declare `specVersion: "0.2.0"`. `reportId` and `timestamp` are assigned
-  once per report instance and remain stable when that instance is serialized again.
-- Durations are parsed as invariant TRX TimeSpans and truncated to whole milliseconds.
-  Fractional seconds and durations spanning days are supported without 32-bit overflow.
-  If duration is absent, it is derived from test timestamps when both are available,
-  otherwise it is `0`. Malformed or negative durations fail conversion.
-- Timestamps respect explicit offsets. Offset-free timestamps are interpreted as UTC.
-  Missing or unparseable test timestamps are omitted. Missing or unparseable run
-  timestamps use the earliest/latest available test timestamp. With no test timestamps,
-  start defaults to `0` and stop defaults to start. Reversed intervals fail conversion.
-- `Passed` maps to `passed`; `Failed`, `Error`, `Timeout`, and `Aborted` map to
-  `failed`; `NotExecuted` maps to `skipped`; `Pending` maps to `pending`.
-  Other or missing outcomes map to `other`. Summary counts follow these normalized
-  results, and `rawStatus` preserves the original outcome when present.
-- `filePath` identifies a source file. A DLL or executable in `codeBase` is omitted.
-  Source `codeBase` paths ending in `.cs`, `.vb`, `.fs`, or `.fsx` are retained;
-  a stack-trace source location takes precedence. `line` remains the location
-  extracted from that trace.
-- `stdout` splits LF, CRLF, and CR line endings on every platform and preserves
-  blank lines. Unavailable optional properties are omitted.
-- Missing test names fall back to the definition name, method name, then TRX test ID.
-  A result with none of these, or an empty test-tool name, fails conversion with a
-  nonzero exit code and does not write a new report.
-
-Validate a generated report with the CTRF CLI:
-
-```bash
-npx ctrf-cli@0.5.0 validate-strict ctrf/ctrf-report.json --spec-version 0.2.0
-```
-
-## Local verification
-
-Requires the .NET 8 SDK and Node.js 20.19 or newer. Restore and build the tool,
-then run the regression checks, including strict CTRF CLI validation:
-
-```bash
-dotnet build -c Release
-node tests/verify.mjs
-```
-
-The regression runner uses `ctrf-cli@0.5.0` through npx by default. To use a
-locally built CLI, set `CTRF_CLI` to its `dist/cli.js` path. Set `DOTNET_COMMAND`
-if the SDK executable is outside PATH. Fixtures exercise existing properties,
-all outcome categories, missing metadata, timing precision, timezone independence,
-source locations, malformed inputs, and rejection of the old string-valued suite.
+The `suite` property now uses an array instead of a string. Compiled assembly
+paths are omitted from `filePath`; source paths from stack traces are retained.
+Conversion also corrects outcome and timing values and rejects malformed input
+without writing a new report.
 
 ## Support Us
 
