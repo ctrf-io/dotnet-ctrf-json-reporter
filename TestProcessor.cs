@@ -30,8 +30,9 @@ namespace DotnetCtrfJsonReporter
                 if (name == null)
                     throw new FormatException("TRX test result has no test name, definition name or testId.");
 
-                var methodDefinition = testDefinition?.Descendants().FirstOrDefault(d => d.Name.LocalName == "TestMethod");
-                var identityTuple = new[] { methodDefinition?.Attribute("className")?.Value ?? "", methodDefinition?.Attribute("name")?.Value ?? "", Path.GetFileName((methodDefinition?.Attribute("codeBase")?.Value ?? "").Replace('\\', '/')), name };
+                // Assembly qualifiers include volatile version metadata and are not part of the test class identity.
+                var className = (testMethod?.Attribute("className")?.Value ?? "").Split(',')[0].Trim();
+                var identityTuple = new[] { className, testMethod?.Attribute("name")?.Value ?? "", Path.GetFileName((testMethod?.Attribute("codeBase")?.Value ?? "").Replace('\\', '/')), name };
                 var logicalIdentity = "ctrf:dotnet:v1:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(identityTuple)))).ToLowerInvariant();
                 var testModel = new TestModel
                 {
@@ -53,11 +54,10 @@ namespace DotnetCtrfJsonReporter
                     ? (testModel.Start.HasValue && testModel.Stop.HasValue ? testModel.Stop.Value - testModel.Start.Value : 0)
                     : ParseTotalMilliseconds(durationString);
 
-                var className = testMethod?.Attribute("className")?.Value;
                 if (!string.IsNullOrWhiteSpace(className))
                 {
                     // Ignore the assembly qualifier; namespace components precede the class.
-                    var hierarchy = className.Split(',')[0].Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var hierarchy = className.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                     if (hierarchy.Length > 0)
                         testModel.Suite = hierarchy;
                 }

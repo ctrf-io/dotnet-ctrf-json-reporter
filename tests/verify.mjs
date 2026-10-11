@@ -80,12 +80,23 @@ try {
   assert.equal('stdout' in tests[3], false);
   assert.deepEqual(tests.map(test => test.rawStatus), ['Passed', 'Failed', 'Error', 'Timeout', 'Aborted', 'NotExecuted', 'Pending', 'Inconclusive', 'FutureOutcome']);
 
-  const identityXml = '<TestRun id="source-run"><Results><UnitTestResult testId="source-case" executionId="source-execution" testName="data-row-1" outcome="Passed" duration="00:00:00.001"/></Results><TestDefinitions><UnitTest id="source-case"><TestMethod className="Assembly.Namespace.Class" name="Method" codeBase="/first/Tests.dll"/></UnitTest></TestDefinitions></TestRun>';
+  const identityXml = '<TestRun id="source-run"><Results><UnitTestResult testId="source-case" executionId="source-execution" testName="data-row-1" outcome="Passed" duration="00:00:00.001"/></Results><TestDefinitions><UnitTest id="source-case"><TestMethod className="Assembly.Namespace.Class, Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" name="Method" codeBase="/first/Tests.dll"/></UnitTest></TestDefinitions></TestRun>';
   const identityOne = convert('identity-one', identityXml, ['--shard-id', 'one']);
   const identityTwo = convert('identity-two', identityXml.replace('/first/', '/second/'), ['--run-id', 'coordinated', '--shard-id', 'two']);
   assert.equal(identityOne.runId, 'source-run');
   assert.equal(identityTwo.runId, 'coordinated');
   assert.equal(identityOne.results.tests[0].testId, identityTwo.results.tests[0].testId);
+  const versionChanged = convert('identity-version-changed', identityXml.replace('Version=1.0.0.0', 'Version=1.0.0.1'));
+  assert.equal(identityOne.results.tests[0].testId, versionChanged.results.tests[0].testId);
+  const unqualified = convert('identity-unqualified', identityXml.replace(', Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null', ''));
+  assert.equal(identityOne.results.tests[0].testId, unqualified.results.tests[0].testId);
+  for (const [label, xml] of [
+    ['class', identityXml.replace('Assembly.Namespace.Class', 'Assembly.Namespace.OtherClass')],
+    ['method', identityXml.replace('name="Method"', 'name="OtherMethod"')],
+  ]) {
+    const distinct = convert(`identity-distinct-${label}`, xml);
+    assert.notEqual(identityOne.results.tests[0].testId, distinct.results.tests[0].testId);
+  }
   assert.equal(identityOne.results.tests[0].executionId, 'source-execution');
   assert.equal(identityOne.results.environment.shardId, 'one');
   assert.notEqual(identityOne.reportId, identityTwo.reportId);
