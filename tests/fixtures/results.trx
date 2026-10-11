@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times start="2026-10-05T12:00:00.123+02:00" finish="2026-10-05T12:00:05.456+02:00" />
+  <Results>
+    <UnitTestResult testId="pass" testName="Passing test" outcome="Passed" duration="00:00:00.1" startTime="2026-10-05T12:00:00.123+02:00" endTime="2026-10-05T12:00:00.223+02:00">
+      <Output><StdOut>first&#13;&#10;&#13;&#10;third&#10;fourth&#13;fifth</StdOut></Output>
+    </UnitTestResult>
+    <UnitTestResult testId="fail" testName="Failing test" outcome="Failed" duration="00:00:00.1234567">
+      <Output><ErrorInfo><Message>Expected true</Message><StackTrace>   at Example.Tests.UnitTests.Failing() in C:\src\UnitTests.cs:line 42</StackTrace></ErrorInfo></Output>
+    </UnitTestResult>
+    <UnitTestResult testId="error" testName="Error test" outcome="Error" duration="00:00:00.01" />
+    <UnitTestResult testId="timeout" testName="Timeout test" outcome="Timeout" duration="01:02:03.4567890" />
+    <UnitTestResult testId="aborted" testName="Aborted test" outcome="Aborted" duration="00:00:00" />
+    <UnitTestResult testId="skip" testName="Skipped test" outcome="NotExecuted" />
+    <UnitTestResult testId="pending" testName="Pending test" outcome="Pending" />
+    <UnitTestResult testId="inconclusive" testName="Inconclusive test" outcome="Inconclusive" duration="30.00:00:00" />
+    <UnitTestResult testId="unknown" testName="Unknown test" outcome="FutureOutcome" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest id="pass" name="Passing test"><TestMethod className="Example.Tests.UnitTests, Example.Tests" name="Passing" codeBase="/build/Example.Tests.dll" /></UnitTest>
+    <UnitTest id="fail" name="Failing test"><TestMethod className="Example.Tests.UnitTests" name="Failing" codeBase="/build/Example.Tests.dll" /></UnitTest>
+    <UnitTest id="error" name="Error test"><TestMethod className="UnitTests" codeBase="/src/UnitTests.cs" /></UnitTest>
+  </TestDefinitions>
+</TestRun>

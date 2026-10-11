@@ -48,3 +48,16 @@ Your contributions are sincerely appreciated. We want to make contributing to th
 - Proposing new features
 
 Thank you for your interest in contributing
+
+## Local verification
+
+Requires the .NET 8 SDK and Node.js 20.19 or newer.
+
+```bash
+dotnet build -c Release
+node tests/verify.mjs
+```
+
+The regression runner validates generated reports using `ctrf-cli@0.5.0` through
+npx. Set `CTRF_CLI` to a local CLI's `dist/cli.js` path or `DOTNET_COMMAND` to an
+SDK executable outside PATH when needed.

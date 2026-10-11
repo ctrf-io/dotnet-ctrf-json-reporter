@@ -7,65 +7,40 @@ namespace DotnetCtrfJsonReporter
         public TestResultsModel ProcessTrxFile(string filePath)
         {
             var trxReport = XDocument.Load(filePath);
-            var testResults = trxReport.Descendants().Where(d => d.Name.LocalName == "UnitTestResult");
+            var tests = new TestProcessor().ProcessTests(trxReport);
             var timesElement = trxReport.Descendants().FirstOrDefault(d => d.Name.LocalName == "Times");
+            var timestamps = tests.SelectMany(test => new[] { test.Start, test.Stop })
+                .Where(time => time.HasValue).Select(time => time!.Value).ToList();
+            var start = TestProcessor.ParseEpochMilliseconds(timesElement?.Attribute("start")?.Value)
+                ?? (timestamps.Count > 0 ? timestamps.Min() : 0);
+            var stop = TestProcessor.ParseEpochMilliseconds(timesElement?.Attribute("finish")?.Value)
+                ?? (timestamps.Count > 0 ? timestamps.Max() : start);
+            if (stop < start)
+                throw new FormatException("TRX run ends before it starts.");
 
-            var totals = new SummaryModel();
-
-            if (timesElement != null)
+            // Count the normalized results, so totals always match the emitted tests.
+            var totals = new SummaryModel
             {
-                totals.Start = ConvertToEpochMilliseconds(ParseDateTime(timesElement.Attribute("start")?.Value));
-                totals.Stop = ConvertToEpochMilliseconds(ParseDateTime(timesElement.Attribute("finish")?.Value));
-            }
-
-            foreach (var testResult in testResults)
-            {
-                totals.Tests++;
-
-                var nunitOutcome = testResult.Attribute("outcome")?.Value;
-                var ctrfOutcome = StatusMapper.MapToCtrfStatus(nunitOutcome);
-                switch (ctrfOutcome)
-                {
-                    case "passed":
-                        totals.Passed++;
-                        break;
-                    case "failed":
-                        totals.Failed++;
-                        break;
-                    case "skipped":
-                        totals.Skipped++;
-                        break;
-                    case "other":
-                        totals.Other++;
-                        break;
-                }
-            }
-
-            var testProcessor = new TestProcessor();
-            var tests = testProcessor.ProcessTests(trxReport);
+                Tests = tests.Count,
+                Passed = tests.Count(test => test.Status == "passed"),
+                Failed = tests.Count(test => test.Status == "failed"),
+                Skipped = tests.Count(test => test.Status == "skipped"),
+                Pending = tests.Count(test => test.Status == "pending"),
+                Other = tests.Count(test => test.Status == "other"),
+                Start = start,
+                Stop = stop
+            };
 
             return new TestResultsModel
             {
+                RunId = trxReport.Root?.Attribute("id")?.Value is string sourceRun && !string.IsNullOrWhiteSpace(sourceRun) ? sourceRun : null,
                 Results = new ResultsModel
                 {
-                    Tool = new ToolModel { Name = "nunit" },
+                    Tool = new ToolModel { Name = "dotnet" },
                     Summary = totals,
                     Tests = tests
                 }
             };
-        }
-
-        private DateTime ParseDateTime(string dateTimeStr)
-        {
-            return DateTime.TryParse(dateTimeStr, out DateTime dateTime) 
-                ? dateTime 
-                : DateTime.MinValue;
-        }
-
-        private long ConvertToEpochMilliseconds(DateTime dateTime)
-        {
-            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            return (long)(dateTime.ToUniversalTime() - epoch).TotalMilliseconds;
         }
     }
 }

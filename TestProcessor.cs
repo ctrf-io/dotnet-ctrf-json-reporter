@@ -1,4 +1,8 @@
+using System.Security.Cryptography;
+using System.Text;
+using Newtonsoft.Json;
 using System.Xml.Linq;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace DotnetCtrfJsonReporter
@@ -13,51 +17,55 @@ namespace DotnetCtrfJsonReporter
 
             foreach (var testResult in testResults)
             {
-                var durationString = testResult.Attribute("duration")?.Value ?? "00:00:00";
-                var totalMilliseconds = ParseTotalMilliseconds(durationString);
-                
                 var testId = testResult.Attribute("testId")?.Value;
                 var testDefinition = testDefinitions.FirstOrDefault(td => td.Attribute("id")?.Value == testId);
 
+                var testMethod = testDefinition?.Descendants().FirstOrDefault(d => d.Name.LocalName == "TestMethod");
+                var name = new[] {
+                    testResult.Attribute("testName")?.Value,
+                    testDefinition?.Attribute("name")?.Value,
+                    testMethod?.Attribute("name")?.Value,
+                    testId
+                }.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+                if (name == null)
+                    throw new FormatException("TRX test result has no test name, definition name or testId.");
+
+                // Assembly qualifiers include volatile version metadata and are not part of the test class identity.
+                var className = NormalizeClassName(testMethod?.Attribute("className")?.Value ?? "");
+                var identityTuple = new[] { className, testMethod?.Attribute("name")?.Value ?? "", Path.GetFileName((testMethod?.Attribute("codeBase")?.Value ?? "").Replace('\\', '/')), name };
+                var logicalIdentity = "ctrf:dotnet:v1:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(identityTuple)))).ToLowerInvariant();
                 var testModel = new TestModel
                 {
-                    Name = testResult.Attribute("testName")?.Value ?? string.Empty,
+                    TestId = logicalIdentity,
+                    ExecutionId = testResult.Attribute("executionId")?.Value is string sourceExecution && !string.IsNullOrWhiteSpace(sourceExecution) ? sourceExecution : Guid.NewGuid().ToString(),
+                    Name = name,
                     Status = StatusMapper.MapToCtrfStatus(testResult.Attribute("outcome")?.Value ?? string.Empty),
-                    Duration = totalMilliseconds,
                     RawStatus = testResult.Attribute("outcome")?.Value,
-                    Stdout =  testResult.Descendants().FirstOrDefault(d => d.Name.LocalName == "StdOut")?.Value.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                    Stdout = testResult.Descendants().FirstOrDefault(d => d.Name.LocalName == "StdOut")?.Value.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None)
                 };
 
-                // Extract timing information
-                if (DateTime.TryParse(testResult.Attribute("startTime")?.Value, out DateTime startTime))
+                testModel.Start = ParseEpochMilliseconds(testResult.Attribute("startTime")?.Value);
+                testModel.Stop = ParseEpochMilliseconds(testResult.Attribute("endTime")?.Value);
+                if (testModel.Start.HasValue && testModel.Stop.HasValue && testModel.Stop < testModel.Start)
+                    throw new FormatException($"TRX test '{name}' ends before it starts.");
+
+                var durationString = testResult.Attribute("duration")?.Value;
+                testModel.Duration = string.IsNullOrWhiteSpace(durationString)
+                    ? (testModel.Start.HasValue && testModel.Stop.HasValue ? testModel.Stop.Value - testModel.Start.Value : 0)
+                    : ParseTotalMilliseconds(durationString);
+
+                if (!string.IsNullOrWhiteSpace(className))
                 {
-                    testModel.Start = ConvertToEpochMilliseconds(startTime);
-                }
-                
-                if (DateTime.TryParse(testResult.Attribute("endTime")?.Value, out DateTime endTime))
-                {
-                    testModel.Stop = ConvertToEpochMilliseconds(endTime);
+                    // Ignore the assembly qualifier; namespace components precede the class.
+                    var hierarchy = className.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    if (hierarchy.Length > 0)
+                        testModel.Suite = hierarchy;
                 }
 
-                // Extract suite information from test definition
-                if (testDefinition != null)
-                {
-                    var testMethod = testDefinition.Descendants().FirstOrDefault(d => d.Name.LocalName == "TestMethod");
-                    var className = testMethod?.Attribute("className")?.Value;
-                    if (!string.IsNullOrEmpty(className))
-                    {
-                        // Extract just the class name without namespace
-                        var classNameParts = className.Split('.');
-                        testModel.Suite = classNameParts.Length > 0 ? classNameParts.Last() : className;
-                    }
-
-                    // Extract file path from codeBase
-                    var codeBase = testMethod?.Attribute("codeBase")?.Value;
-                    if (!string.IsNullOrEmpty(codeBase))
-                    {
-                        testModel.FilePath = codeBase;
-                    }
-                }
+                // TRX codeBase normally names the compiled assembly, not the source file.
+                var codeBase = testMethod?.Attribute("codeBase")?.Value;
+                if (codeBase != null && new[] { ".cs", ".vb", ".fs", ".fsx" }.Contains(Path.GetExtension(codeBase), StringComparer.OrdinalIgnoreCase))
+                    testModel.FilePath = codeBase;
 
                 // Extract error information for failed tests
                 var errorInfo = testResult.Descendants().FirstOrDefault(d => d.Name.LocalName == "ErrorInfo");
@@ -65,7 +73,7 @@ namespace DotnetCtrfJsonReporter
                 {
                     var messageElement = errorInfo.Descendants().FirstOrDefault(d => d.Name.LocalName == "Message");
                     var stackTraceElement = errorInfo.Descendants().FirstOrDefault(d => d.Name.LocalName == "StackTrace");
-                    
+
                     testModel.Message = messageElement?.Value;
                     testModel.Trace = stackTraceElement?.Value;
 
@@ -96,7 +104,7 @@ namespace DotnetCtrfJsonReporter
             // Pattern to match: "at MethodName() in /path/to/file.cs:line 42"
             var pattern = @"at .+ in (.+):line (\d+)";
             var match = Regex.Match(stackTrace, pattern);
-            
+
             if (match.Success)
             {
                 var filePath = match.Groups[1].Value;
@@ -106,45 +114,89 @@ namespace DotnetCtrfJsonReporter
                 }
                 return (null, filePath);
             }
-            
+
             return (null, null);
         }
 
-        private long ConvertToEpochMilliseconds(DateTime dateTime)
+        private static string NormalizeClassName(string value)
         {
-            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            return (long)(dateTime.ToUniversalTime() - epoch).TotalMilliseconds;
-        }
-
-        private int ParseTotalMilliseconds(string durationString)
-        {
-            var trimmedDuration = durationString.Length > 12 ? durationString.Substring(0, 12) : durationString;
-
-            var parts = trimmedDuration.Split(':');
-            var secondsAndMilliseconds = parts[2].Split('.');
-
-            var hours = int.Parse(parts[0]);
-            var minutes = int.Parse(parts[1]);
-            var seconds = int.Parse(secondsAndMilliseconds[0]);
-            var milliseconds = secondsAndMilliseconds.Length > 1 ? int.Parse(secondsAndMilliseconds[1]) : 0;
-
-            return (hours * 3600000) + (minutes * 60000) + (seconds * 1000) + milliseconds;
-        }
-
-        private static ErrorInfo? GetErrorInfo(XElement testResult)
-        {
-            var errorInfo = testResult.Descendants().Where(x => x.Name.LocalName == "ErrorInfo").FirstOrDefault();
-            if (errorInfo is null)
+            // A qualifier starts at a comma outside brackets. Generic arguments can
+            // contain their own qualified types, so normalize those recursively.
+            var typeName = SplitTypeComponents(value).First().Trim();
+            var normalized = new StringBuilder();
+            for (var i = 0; i < typeName.Length; i++)
             {
-                return null;
+                if (typeName[i] == '\\' && i + 1 < typeName.Length)
+                {
+                    normalized.Append(typeName[i]).Append(typeName[++i]);
+                    continue;
+                }
+                if (typeName[i] != '[' || !Regex.IsMatch(typeName[..i], @"`\d+$"))
+                {
+                    normalized.Append(typeName[i]);
+                    continue;
+                }
+
+                var end = i + 1;
+                var depth = 1;
+                for (; end < typeName.Length; end++)
+                {
+                    if (typeName[end] == '\\') { end++; continue; }
+                    if (typeName[end] == '[') depth++;
+                    if (typeName[end] == ']' && --depth == 0) break;
+                }
+                if (end == typeName.Length)
+                {
+                    normalized.Append(typeName[i..]);
+                    break;
+                }
+
+                var arguments = SplitTypeComponents(typeName[(i + 1)..end]).Select(argument =>
+                {
+                    var type = argument.Trim();
+                    if (type.StartsWith('[') && type.EndsWith(']')) type = type[1..^1];
+                    return NormalizeClassName(type);
+                });
+                normalized.Append('[').AppendJoin(",", arguments).Append(']');
+                i = end;
             }
-
-            var message = errorInfo.Descendants().Where(x => x.Name.LocalName == "Message").FirstOrDefault();
-            var trace = errorInfo.Descendants().Where(x => x.Name.LocalName == "StackTrace").FirstOrDefault();
-
-            return new(message?.Value, trace?.Value);
+            return normalized.ToString();
         }
 
-        private record ErrorInfo(string? Message, string? Trace);
+        private static IEnumerable<string> SplitTypeComponents(string value)
+        {
+            var depth = 0;
+            var start = 0;
+            for (var i = 0; i < value.Length; i++)
+            {
+                if (value[i] == '\\') { i++; continue; }
+                if (value[i] == '[') depth++;
+                if (value[i] == ']') depth--;
+                if (value[i] == ',' && depth == 0)
+                {
+                    yield return value[start..i];
+                    start = i + 1;
+                }
+            }
+            yield return value[start..];
+        }
+
+        internal static long? ParseEpochMilliseconds(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+            if (!DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var dateTime))
+                return null;
+            return dateTime.ToUnixTimeMilliseconds();
+        }
+
+        private static long ParseTotalMilliseconds(string value)
+        {
+            if (!TimeSpan.TryParse(value, CultureInfo.InvariantCulture, out var duration) || duration < TimeSpan.Zero)
+                throw new FormatException($"Invalid TRX duration '{value}'. Expected a non-negative TimeSpan.");
+            // CTRF uses integer milliseconds; discard sub-millisecond precision.
+            return duration.Ticks / TimeSpan.TicksPerMillisecond;
+        }
     }
 }
