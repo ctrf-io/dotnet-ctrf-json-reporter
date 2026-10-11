@@ -97,6 +97,25 @@ try {
     const distinct = convert(`identity-distinct-${label}`, xml);
     assert.notEqual(identityOne.results.tests[0].testId, distinct.results.tests[0].testId);
   }
+  const genericClass = 'Example.Tests`2[[System.String, System.Private.CoreLib, Version=8.0.0.0],[System.Int32, System.Private.CoreLib, Version=8.0.0.0]], Tests, Version=1.0.0.0';
+  const genericXml = identityXml.replace(/className="[^"]*"/, `className="${genericClass}"`);
+  const generic = convert('identity-generic', genericXml);
+  const otherGeneric = convert('identity-generic-other', genericXml.replace('System.Int32', 'System.Boolean'));
+  assert.notEqual(generic.results.tests[0].testId, otherGeneric.results.tests[0].testId);
+  const genericVersions = convert('identity-generic-versions', genericXml.replaceAll('Version=8.0.0.0', 'Version=9.0.0.0').replace('Version=1.0.0.0', 'Version=1.0.0.1'));
+  assert.equal(generic.results.tests[0].testId, genericVersions.results.tests[0].testId);
+  const genericUnqualified = convert('identity-generic-unqualified', genericXml.replace(genericClass, 'Example.Tests`2[System.String,System.Int32]'));
+  assert.equal(generic.results.tests[0].testId, genericUnqualified.results.tests[0].testId);
+  const nestedXml = genericXml.replace('System.Int32, System.Private.CoreLib, Version=8.0.0.0', 'System.Collections.Generic.List`1[[System.Int32[], System.Private.CoreLib, Version=8.0.0.0]], System.Private.CoreLib, Version=8.0.0.0');
+  const nested = convert('identity-generic-nested', nestedXml);
+  const nestedOther = convert('identity-generic-nested-other', nestedXml.replace('System.Int32[]', 'System.Boolean[]'));
+  assert.notEqual(nested.results.tests[0].testId, nestedOther.results.tests[0].testId);
+  const nestedVersions = convert('identity-generic-nested-versions', nestedXml.replaceAll('Version=8.0.0.0', 'Version=9.0.0.0'));
+  assert.equal(nested.results.tests[0].testId, nestedVersions.results.tests[0].testId);
+  const nestedUnqualified = convert('identity-generic-nested-unqualified', nestedXml.replace(/className="[^"]*"/, 'className="Example.Tests`2[System.String,System.Collections.Generic.List`1[System.Int32[]]]"'));
+  assert.equal(nested.results.tests[0].testId, nestedUnqualified.results.tests[0].testId);
+  const arrayRank = convert('identity-generic-array-rank', nestedXml.replace('System.Int32[]', 'System.Int32[,]'));
+  assert.notEqual(nested.results.tests[0].testId, arrayRank.results.tests[0].testId);
   assert.equal(identityOne.results.tests[0].executionId, 'source-execution');
   assert.equal(identityOne.results.environment.shardId, 'one');
   assert.notEqual(identityOne.reportId, identityTwo.reportId);

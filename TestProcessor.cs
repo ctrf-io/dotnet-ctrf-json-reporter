@@ -31,7 +31,7 @@ namespace DotnetCtrfJsonReporter
                     throw new FormatException("TRX test result has no test name, definition name or testId.");
 
                 // Assembly qualifiers include volatile version metadata and are not part of the test class identity.
-                var className = (testMethod?.Attribute("className")?.Value ?? "").Split(',')[0].Trim();
+                var className = NormalizeClassName(testMethod?.Attribute("className")?.Value ?? "");
                 var identityTuple = new[] { className, testMethod?.Attribute("name")?.Value ?? "", Path.GetFileName((testMethod?.Attribute("codeBase")?.Value ?? "").Replace('\\', '/')), name };
                 var logicalIdentity = "ctrf:dotnet:v1:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(identityTuple)))).ToLowerInvariant();
                 var testModel = new TestModel
@@ -116,6 +116,69 @@ namespace DotnetCtrfJsonReporter
             }
 
             return (null, null);
+        }
+
+        private static string NormalizeClassName(string value)
+        {
+            // A qualifier starts at a comma outside brackets. Generic arguments can
+            // contain their own qualified types, so normalize those recursively.
+            var typeName = SplitTypeComponents(value).First().Trim();
+            var normalized = new StringBuilder();
+            for (var i = 0; i < typeName.Length; i++)
+            {
+                if (typeName[i] == '\\' && i + 1 < typeName.Length)
+                {
+                    normalized.Append(typeName[i]).Append(typeName[++i]);
+                    continue;
+                }
+                if (typeName[i] != '[' || !Regex.IsMatch(typeName[..i], @"`\d+$"))
+                {
+                    normalized.Append(typeName[i]);
+                    continue;
+                }
+
+                var end = i + 1;
+                var depth = 1;
+                for (; end < typeName.Length; end++)
+                {
+                    if (typeName[end] == '\\') { end++; continue; }
+                    if (typeName[end] == '[') depth++;
+                    if (typeName[end] == ']' && --depth == 0) break;
+                }
+                if (end == typeName.Length)
+                {
+                    normalized.Append(typeName[i..]);
+                    break;
+                }
+
+                var arguments = SplitTypeComponents(typeName[(i + 1)..end]).Select(argument =>
+                {
+                    var type = argument.Trim();
+                    if (type.StartsWith('[') && type.EndsWith(']')) type = type[1..^1];
+                    return NormalizeClassName(type);
+                });
+                normalized.Append('[').AppendJoin(",", arguments).Append(']');
+                i = end;
+            }
+            return normalized.ToString();
+        }
+
+        private static IEnumerable<string> SplitTypeComponents(string value)
+        {
+            var depth = 0;
+            var start = 0;
+            for (var i = 0; i < value.Length; i++)
+            {
+                if (value[i] == '\\') { i++; continue; }
+                if (value[i] == '[') depth++;
+                if (value[i] == ']') depth--;
+                if (value[i] == ',' && depth == 0)
+                {
+                    yield return value[start..i];
+                    start = i + 1;
+                }
+            }
+            yield return value[start..];
         }
 
         internal static long? ParseEpochMilliseconds(string? value)
