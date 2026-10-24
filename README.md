@@ -176,3 +176,9 @@ without writing a new report.
 ## Support Us
 
 If you find this project useful, consider giving it a GitHub star ⭐ It means a lot to us.
+
+## Development verification
+
+See [Contributing](CONTRIBUTING.md) and the
+[standard conformance suites](tests/standard/conformance/README.md) for native
+unit/integration checks, existing regressions and CI result scopes.

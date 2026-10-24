@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Reporter tests and conformance (.NET 8, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Prepare result paths
+        run: |
+          echo "CTRF_STANDARD_ARTIFACTS=$RUNNER_TEMP/dotnet-reporter-tests" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/dotnet-reporter-tests"
+
+      - name: Restore reporter and isolated test tooling
+        id: restore
+        run: dotnet restore tests/ConformanceHarness.csproj
+
+      - name: Build reporter with warnings as errors
+        run: dotnet build DotnetCtrfJsonReporter.csproj -c Release --no-restore -warnaserror
+
+      - name: Build native test tooling
+        id: tooling
+        if: ${{ !cancelled() && steps.restore.outcome == 'success' }}
+        run: dotnet build tests/ConformanceHarness.csproj -c Release --no-restore
+
+      - name: Prepare existing strict validator
+        id: validator
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        run: |
+          npm install --prefix "$RUNNER_TEMP/ctrf-validator" --no-save --package-lock=false ctrf-cli@0.5.0
+          echo "CTRF_CLI=$RUNNER_TEMP/ctrf-validator/node_modules/ctrf-cli/dist/cli.js" >> "$GITHUB_ENV"
+
+      - name: Existing regressions and native controls
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' && steps.validator.outcome == 'success' }}
+        run: bash tests/run.sh ordinary
+
+      - name: Shared checker controls
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        run: bash tests/run.sh checker
+
+      - name: Unit conformance
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        run: bash tests/run.sh unit
+
+      - name: Installed tool and real framework conformance
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        run: bash tests/run.sh integration
+
+      - name: Publish conformance test reports
+        uses: ctrf-io/github-test-reporter@v1
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        with:
+          report-path: '${{ runner.temp }}/dotnet-reporter-tests/reports/*.json'
+          title: 'Reporter conformance — contract families (.NET 8, ${{ matrix.os }})'
+          summary-report: true
+          suite-folded-report: true
+          group-by: suite
+          pull-request: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+          overwrite-comment: true
+          comment-tag: reporter-conformance
+          collapse-large-reports: true
+          upload-artifact: true
+          artifact-name: reporter-conformance-dotnet8-${{ matrix.os }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish shared checker controls
+        uses: ctrf-io/github-test-reporter@v1
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        with:
+          report-path: '${{ runner.temp }}/dotnet-reporter-tests/checker-reports/*.json'
+          title: 'Shared checker controls (.NET 8, ${{ matrix.os }})'
+          summary-report: true
+          suite-folded-report: true
+          group-by: suite
+          pull-request: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+          overwrite-comment: true
+          comment-tag: reporter-checker
+          collapse-large-reports: true
+          upload-artifact: true
+          artifact-name: reporter-checker-dotnet8-${{ matrix.os }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish ordinary reporter tests
+        uses: ctrf-io/github-test-reporter@v1
+        if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
+        with:
+          report-path: '${{ runner.temp }}/dotnet-reporter-tests/reporter-reports/*.json'
+          title: 'Reporter tests (.NET 8, ${{ matrix.os }})'
+          summary-report: true
+          test-report: true
+          pull-request: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+          overwrite-comment: true
+          comment-tag: reporter-tests
+          collapse-large-reports: true
+          upload-artifact: true
+          artifact-name: reporter-tests-dotnet8-${{ matrix.os }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Retain all results and diagnostics
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dotnet-reporter-tests-${{ matrix.os }}
+          path: ${{ runner.temp }}/dotnet-reporter-tests/
+          include-hidden-files: true
+          if-no-files-found: warn
