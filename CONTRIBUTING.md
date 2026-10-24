@@ -61,3 +61,30 @@ node tests/verify.mjs
 The regression runner validates generated reports using `ctrf-cli@0.5.0` through
 npx. Set `CTRF_CLI` to a local CLI's `dist/cli.js` path or `DOTNET_COMMAND` to an
 SDK executable outside PATH when needed.
+
+## Standard conformance tests
+
+Keep existing reporter regressions and standard conformance separate. See
+[Standard conformance](tests/standard/conformance/README.md) for suite boundaries,
+capabilities, result handling and CI reporting.
+
+```bash
+dotnet restore tests/ConformanceHarness.csproj
+bash tests/run.sh ordinary
+bash tests/run.sh standard
+```
+
+The harness uses native C# assertions and a test-only schema validator. The public
+tool's dependencies remain separate. Integration needs NuGet access for real
+framework consumers and installs the locally packed reporter.
+
+When changing schema/specification behavior or reporter output, assess affected
+shared family IDs, capabilities, source expectations and both conformance levels.
+Keep unsupported optional entries visible with reasons. Missing fixtures fail;
+known defects require strict expected-failure records rather than skips. Native
+fixture, matcher and reporting controls belong outside `tests/standard`. Deliberate
+common checker changes require provenance, control updates and adoption review.
+
+CI retains ordinary reporter results, contract families and checker controls as
+separate scopes. The Ubuntu reference job updates their separate PR comments;
+fork runs retain summaries and artifacts. Release automation remains separate.

@@ -1,0 +1,2 @@
+# Keep the shared conformance snapshot byte-identical on every platform.
+tests/standard/** text eol=lf

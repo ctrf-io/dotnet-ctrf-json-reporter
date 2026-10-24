@@ -1,0 +1,22 @@
+{
+  "revision": "standard-checker-controls-v1",
+  "implementation": "native-dotnet-v1",
+  "source": {
+    "repository": "ctrf-io/jest-ctrf-json-reporter",
+    "commit": "a067e6d94f172db0636c4bd1d9c3706cafae2b48"
+  },
+  "schema": {
+    "repository": "ctrf-io/ctrf",
+    "commit": "e325eb33c7662a208bfa4d093a41cc55439d6e6a",
+    "path": "schema/ctrf.schema.json",
+    "specVersion": "0.2.0"
+  },
+  "files": {
+    "conformance/shared/catalogue.json": "a700f698e2c7b9a695628fb56e491fea49eaecb464b74b790752d4abcfde1c6c",
+    "conformance/shared/ctrf.schema.json": "cb9bd075beb0e046076046793f96bb1ba72bd1b1d331b1fbd42ac0ea36776cf3",
+    "conformance/shared/checker-ids.json": "4f76b232fb878b5963b084ef4394433b981bab3bc06e19f669d24b2d1c6c9dc8",
+    "conformance/shared/Checks.cs": "f528767648f536a3ee864db4a45c5b5e0270021dede34019e01cc511db3a2cac",
+    "conformance/shared/ExpectedFailures.cs": "71e823d87c6594f6267d4d31b22af6a448f245a0dfbc817055f3ae2bf83f71fc",
+    "checker/CheckerControls.cs": "837b14056e96257f2c347af664967000f1ce241bff9b29841d859ecf94e01e9b"
+  }
+}
