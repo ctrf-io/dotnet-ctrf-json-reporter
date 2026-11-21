@@ -38,7 +38,7 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
 ```json
 {
   "reportFormat": "CTRF",
-  "specVersion": "0.2.0",
+  "specVersion": "0.3.0",
   "reportId": "73d880a2-3d3b-4d2c-a9aa-3f2774269457",
   "timestamp": "2026-10-05T10:00:00Z",
   "generatedBy": "dotnet-ctrf-json-reporter",
@@ -151,7 +151,7 @@ dotnet tool run DotnetCtrfJsonReporter \
 
 ## Test Object Properties
 
-Reports target **CTRF specification 0.2.0**. The test object includes the following [CTRF properties](https://ctrf.io/docs/specification/test):
+Reports target **CTRF specification 0.3.0**. The test object includes the following [CTRF properties](https://ctrf.io/docs/specification/test):
 
 | Name         | Type   | Required | Details                                                                             |
 | ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |

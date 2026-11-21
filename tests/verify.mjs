@@ -10,7 +10,7 @@ const temporary = mkdtempSync(path.join(tmpdir(), 'dotnet-ctrf-'));
 const dotnet = process.env.DOTNET_COMMAND || 'dotnet';
 const cli = process.env.CTRF_CLI
   ? [process.execPath, [path.resolve(process.env.CTRF_CLI)]]
-  : ['npx', ['--yes', 'ctrf-cli@0.5.0']];
+  : ['npx', ['--yes', 'ctrf-cli@0.6.0']];
 let reports = 0;
 let rejected = 0;
 
@@ -23,7 +23,7 @@ function execute(command, args, expected = 0) {
   return result;
 }
 function validate(reportPath, expected = 0) {
-  const result = execute(cli[0], [...cli[1], 'validate-strict', reportPath, '--spec-version', '0.2.0'], expected);
+  const result = execute(cli[0], [...cli[1], 'validate-strict', reportPath, '--spec-version', '0.3.0'], expected);
   if (expected === 0) assert.ok(result.stdout.includes('is valid CTRF (strict)'), result.stdout);
 }
 function convert(name, xml, options = []) {
@@ -34,7 +34,7 @@ function convert(name, xml, options = []) {
   validate(output);
   reports++;
   const report = JSON.parse(readFileSync(output, 'utf8'));
-  assert.equal(report.specVersion, '0.2.0');
+  assert.equal(report.specVersion, '0.3.0');
   assert.equal(report.reportFormat, 'CTRF');
   assert.equal(report.generatedBy, 'dotnet-ctrf-json-reporter');
   assert.match(report.reportId, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
@@ -169,7 +169,7 @@ try {
   const legacy = path.join(temporary, 'legacy.json');
   writeFileSync(legacy, JSON.stringify(report));
   validate(legacy, 2);
-  console.log(`Passed: ${reports} reports accepted by CTRF CLI strict validation against specification 0.2.0; ${rejected} malformed inputs rejected; legacy suite rejected.`);
+  console.log(`Passed: ${reports} reports accepted by CTRF CLI strict validation against specification 0.3.0; ${rejected} malformed inputs rejected; legacy suite rejected.`);
 } finally {
   rmSync(temporary, { recursive: true, force: true });
 }

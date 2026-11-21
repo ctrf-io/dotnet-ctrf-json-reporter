@@ -4,7 +4,7 @@ namespace DotnetCtrfJsonReporter
 {
     public class TestResultsModel
     {
-        public string SpecVersion => "0.2.0";
+        public string SpecVersion => "0.3.0";
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? RunId { get; set; }
         public string ReportId { get; } = Guid.NewGuid().ToString();

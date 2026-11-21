@@ -5,13 +5,13 @@ using ReporterTests.Native;
 
 namespace ReporterTests.Standard;
 
-public static class CheckerControls
+public static partial class CheckerControls
 {
     public static Entry Property(string path) => Checks.Entries.Single(e => e.Path == path);
     public static Entry Rule(string rule) => Checks.Entries.Single(e => e.Rule == rule);
     public static Context Valid()
     {
-        var report = JObject.Parse("""{"reportFormat":"CTRF","specVersion":"0.2.0","results":{"tool":{"name":"independent-control"},"summary":{"tests":1,"passed":1,"failed":0,"pending":0,"skipped":0,"other":0,"start":100,"stop":120},"tests":[{"name":"case","status":"passed","duration":12,"retries":1,"flaky":true,"attemptId":"final","retryAttempts":[{"attempt":1,"attemptId":"first","status":"failed"}]}]}}""");
+        var report = JObject.Parse("""{"reportFormat":"CTRF","specVersion":"0.3.0","results":{"tool":{"name":"independent-control"},"summary":{"tests":1,"passed":1,"failed":0,"pending":0,"skipped":0,"other":0,"start":100,"stop":120},"tests":[{"name":"case","status":"passed","duration":12,"retries":1,"flaky":true,"attemptId":"final","retryAttempts":[{"attempt":1,"attemptId":"first","status":"failed"}]}]}}""");
         var expected = JObject.Parse("""{"results":{"summary":{"tests":1},"tests":[{"duration":12,"sourceAttempts":[{"status":"failed"},{"status":"passed","duration":12}]}]}}""");
         return new Context { Samples = [new Sample("valid", Encoding.UTF8.GetBytes(report.ToString()), report, expected)] };
     }
@@ -22,6 +22,7 @@ public static class CheckerControls
     public static List<TestCase> Cases() => Checks.CheckerIds.Select(id => new TestCase(id, () => Run(id))).ToList();
     private static void Run(string id)
     {
+        if (id.StartsWith("checker/0.3.0/", StringComparison.Ordinal)) { Run030(id.Split('/')[^1]); return; }
         if (id.StartsWith("checker/expected-failure/", StringComparison.Ordinal)) { Defect(id.Split('/')[^1]); return; }
         var context = Valid(); var sample = context.Samples[0]; var test = Checks.Tests(sample.Report)[0]; var history = Checks.History(test)[0];
         void CheckRule(string name) => Checks.Check(Rule(name), context);
@@ -54,7 +55,7 @@ public static class CheckerControls
             case "checker/specification/total-count-recommendation-warns-but-bounds-fail": Checks.Summary(sample.Report)["tests"] = 2; CheckProperty("results.summary.tests"); CheckRule("summary-matches-final-results"); Checks.Equal(context.Warnings.Count, 1, "Warning count"); Checks.Summary(sample.Report)["tests"] = -1; Reject(() => CheckProperty("results.summary.tests")); break;
             case "checker/schema/shared-snapshot-matches-declared-files":
                 var root = Path.Combine(Contract.Root, "tests/standard"); var manifest = JObject.Parse(File.ReadAllText(Path.Combine(root, "shared-files.json")));
-                Checks.Equal(manifest["revision"], "standard-checker-controls-v1", "Source revision"); Checks.Need(manifest["files"]!.Count() >= 5, "Missing native snapshot");
+                Checks.Equal(manifest["revision"], "standard-checker-controls-v2-0.3.0", "Source revision"); Checks.Need(manifest["files"]!.Count() >= 5, "Missing native snapshot");
                 foreach (var file in ((JObject)manifest["files"]!).Properties()) Checks.Equal(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(Path.Combine(root, file.Name)))).ToLowerInvariant(), (string)file.Value!, "Shared file drift: " + file.Name); break;
             default:
                 var name = id.Replace("checker/specification/rejects-", "", StringComparison.Ordinal).Replace("-mutation", "", StringComparison.Ordinal);

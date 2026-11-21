@@ -79,7 +79,7 @@ public static class Fixtures
         var summary = new JObject { ["tests"] = cases.Count, ["start"] = Epoch((string?)runTimes?.Attribute("start")) ?? (times.Count > 0 ? times.Min() : 0) };
         summary["stop"] = Epoch((string?)runTimes?.Attribute("finish")) ?? (times.Count > 0 ? times.Max() : (long)summary["start"]!);
         foreach (var status in new[] {"passed", "failed", "pending", "skipped", "other"}) summary[status] = cases.Count(t => (string?)t["status"] == status);
-        var expected = new JObject { ["reportFormat"] = "CTRF", ["specVersion"] = "0.2.0", ["generatedBy"] = "dotnet-ctrf-json-reporter", ["results"] = new JObject { ["tool"] = new JObject { ["name"] = tool }, ["summary"] = summary, ["tests"] = cases } };
+        var expected = new JObject { ["reportFormat"] = "CTRF", ["specVersion"] = "0.3.0", ["generatedBy"] = "dotnet-ctrf-json-reporter", ["results"] = new JObject { ["tool"] = new JObject { ["name"] = tool }, ["summary"] = summary, ["tests"] = cases } };
         var runId = run ?? (string?)doc.Root?.Attribute("id"); if (!string.IsNullOrWhiteSpace(runId)) expected["runId"] = runId;
         if (shard != null) Checks.Results(expected)["environment"] = new JObject { ["shardId"] = shard };
         return expected;

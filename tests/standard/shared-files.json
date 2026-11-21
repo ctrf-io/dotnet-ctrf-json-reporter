@@ -1,22 +1,36 @@
 {
-  "revision": "standard-checker-controls-v1",
-  "implementation": "native-dotnet-v1",
+  "revision": "standard-checker-controls-v2-0.3.0",
+  "implementation": "native-dotnet-v2-0.3.0",
   "source": {
     "repository": "ctrf-io/jest-ctrf-json-reporter",
-    "commit": "a067e6d94f172db0636c4bd1d9c3706cafae2b48"
+    "commit": "b184f666c9a9982fa7d2c5a79c23d38f8b16d82b",
+    "revision": "standard-checker-controls-v2-0.3.0",
+    "files": {
+      "conformance/shared/catalogue.json": "a56d95e1aaecca13bbf5ec3449c30decdddb796c6a6d9e288be7fa8c4b9a5858",
+      "conformance/shared/checks.mjs": "80dd770f645e3f76bd002624aa27be8df244f846cf82afd0335bed2af1abddcf",
+      "conformance/shared/expected-failures.mjs": "c8677174694a5ce433abd54205f5f2122e0d0b37ee062d6fa39df9f615d09120",
+      "checker/checker.test.mjs": "bb03bcc08e0c8808483f9352b429c4dfc0e52f89929474023f9071f6ae7ca195",
+      "checker/run.mjs": "132eb103a0d2d939151110c62b639432d371d9d081f8d2adc26b7d6fd73836dc",
+      "conformance/reporters/ctrf.mjs": "eb41706584829f359c7a1a574a4773dfaaa40c27d5f8c802f5c5a895f05033ba",
+      "conformance/reporters/node.mjs": "dfe202dea4c8813c9bed6fea1ec0bcd7635c45066a95bf7e58d8df114f589c69",
+      "run-all.mjs": "0e7029e95ea4a36fc4438cd5eb6cf3703ffa56152f97bc6dc2a75bbf1cb6da4a"
+    }
   },
   "schema": {
     "repository": "ctrf-io/ctrf",
-    "commit": "e325eb33c7662a208bfa4d093a41cc55439d6e6a",
+    "commit": "6cafa1ebdf4d5286f6e208124d313269aa357411",
     "path": "schema/ctrf.schema.json",
-    "specVersion": "0.2.0"
+    "specVersion": "0.3.0",
+    "tag": "v0.3.0"
   },
   "files": {
-    "conformance/shared/catalogue.json": "a700f698e2c7b9a695628fb56e491fea49eaecb464b74b790752d4abcfde1c6c",
-    "conformance/shared/ctrf.schema.json": "cb9bd075beb0e046076046793f96bb1ba72bd1b1d331b1fbd42ac0ea36776cf3",
-    "conformance/shared/checker-ids.json": "4f76b232fb878b5963b084ef4394433b981bab3bc06e19f669d24b2d1c6c9dc8",
-    "conformance/shared/Checks.cs": "f528767648f536a3ee864db4a45c5b5e0270021dede34019e01cc511db3a2cac",
+    "conformance/shared/catalogue.json": "a56d95e1aaecca13bbf5ec3449c30decdddb796c6a6d9e288be7fa8c4b9a5858",
+    "conformance/shared/ctrf.schema.json": "d8765d80a8cf2e9e81611f5db97497599f56949938255ae2bf4aca84e234dd21",
+    "conformance/shared/checker-ids.json": "5f352bc8c5270601e912d31ba34c453f16be223d7b622a8b5bd547fa6c4ae97a",
+    "conformance/shared/Checks.cs": "c1d1c66d350446bd7f8c2b377a13ac4c939663f0803626338ed1ff277ae9fc74",
     "conformance/shared/ExpectedFailures.cs": "71e823d87c6594f6267d4d31b22af6a448f245a0dfbc817055f3ae2bf83f71fc",
-    "checker/CheckerControls.cs": "837b14056e96257f2c347af664967000f1ce241bff9b29841d859ecf94e01e9b"
+    "checker/CheckerControls.cs": "47e1d654cf67aa289f1bab8c3b50a05675fb9e88c9a8c53b79ac9449ee7ea5f8",
+    "conformance/shared/Checks030.cs": "7a49a5321b6730c5edfe32099131063d377012ad98d695b35d2b3dda06938c15",
+    "checker/CheckerControls030.cs": "a91414cdcc8ff8abe581ac5b4e2a95a588feb05cda634114ab7192a03d367f2f"
   }
 }

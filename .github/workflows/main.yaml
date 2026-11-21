@@ -60,7 +60,7 @@ jobs:
         id: validator
         if: ${{ !cancelled() && steps.tooling.outcome == 'success' }}
         run: |
-          npm install --prefix "$RUNNER_TEMP/ctrf-validator" --no-save --package-lock=false ctrf-cli@0.5.0
+          npm install --prefix "$RUNNER_TEMP/ctrf-validator" --no-save --package-lock=false ctrf-cli@0.6.0
           echo "CTRF_CLI=$RUNNER_TEMP/ctrf-validator/node_modules/ctrf-cli/dist/cli.js" >> "$GITHUB_ENV"
 
       - name: Existing regressions and native controls
