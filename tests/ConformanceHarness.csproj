@@ -9,7 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../DotnetCtrfJsonReporter.csproj" />
-    <PackageReference Include="JsonSchema.Net" Version="7.3.4" />
+    <PackageReference Include="JsonSchema.Net" Version="9.7.0" />
     <Compile Remove="native/fixtures/**/*.cs" />
     <EmbeddedResource Include="standard/conformance/shared/*.json" />
   </ItemGroup>

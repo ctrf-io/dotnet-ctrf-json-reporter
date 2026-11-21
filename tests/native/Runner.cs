@@ -63,7 +63,7 @@ public static class Runner
         }
         var summary = new JObject { ["tests"] = tests.Count, ["start"] = 0, ["stop"] = 0 };
         foreach (var status in new[] {"passed", "failed", "pending", "skipped", "other"}) summary[status] = records.Count(r => r.Status == status);
-        var report = new JObject { ["reportFormat"] = "CTRF", ["specVersion"] = "0.2.0", ["results"] = new JObject { ["tool"] = new JObject { ["name"] = "Native .NET assessment" }, ["summary"] = summary, ["tests"] = tests } };
+        var report = new JObject { ["reportFormat"] = "CTRF", ["specVersion"] = "0.3.0", ["results"] = new JObject { ["tool"] = new JObject { ["name"] = "Native .NET assessment" }, ["summary"] = summary, ["tests"] = tests } };
         var bytes = Encoding.UTF8.GetBytes(report.ToString()); Checks.Validate(bytes); return bytes;
     }
     public static void Write(string scope, List<Completed> records, string artifacts)

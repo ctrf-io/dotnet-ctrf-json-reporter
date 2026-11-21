@@ -8,7 +8,7 @@ namespace ReporterTests.Standard;
 
 public sealed record Entry(string Id, string Kind, string? Path, string? Rule, bool Required);
 public sealed record Capability(bool Supported, string Reason);
-public sealed record Sample(string Name, byte[] Bytes, JObject Report, JObject Expected, long[]? RunWindow = null);
+public sealed record Sample(string Name, byte[] Bytes, JObject Report, JObject Expected, long[]? RunWindow = null, List<JObject>? DirectSources = null);
 public sealed class Context
 {
     public List<Sample> Samples { get; init; } = [];
@@ -24,7 +24,7 @@ public sealed class Mismatch(string code, object? actual, object? expected) : Ex
     public object? Actual { get; } = actual;
     public object? Expected { get; } = expected;
 }
-public static class Checks
+public static partial class Checks
 {
     public static byte[] Resource(string suffix)
     {
@@ -39,7 +39,7 @@ public static class Checks
     private static readonly JsonSchema Document = JsonSchema.FromText(Schema.ToString());
     private static readonly Dictionary<string, JsonSchema> Validators = [];
     private static readonly HashSet<string> Recommended = ["orders-start-and-stop", "case-identity-stable-across-runs", "execution-identity-distinguishes-executions", "attempt-identity-scoped-to-execution", "attachment-identity-scoped-to-parent", "document-identity-follows-emission", "coordinates-run-and-shard-identity"];
-    public static readonly string[] Rules = ["utf8-without-bom", "single-json-object", "declares-supported-contract", "summary-matches-final-results", "summary-matches-flaky-results", "orders-start-and-stop", "history-requires-retry-count", "positive-retries-require-history", "zero-retries-omit-history", "retry-count-matches-history-length", "history-orders-contiguous-attempts", "history-excludes-final-attempt", "flaky-matches-attempt-outcomes", "case-identity-stable-across-runs", "execution-identity-distinguishes-executions", "attempt-identity-scoped-to-execution", "attachment-identity-scoped-to-parent", "document-identity-follows-emission", "coordinates-run-and-shard-identity", "respects-reserved-extension-ownership"];
+    public static readonly string[] Rules = ["utf8-without-bom", "single-json-object", "declares-supported-contract", "summary-matches-final-results", "summary-matches-flaky-results", "orders-start-and-stop", "history-requires-retry-count", "positive-retries-require-history", "zero-retries-omit-history", "retry-count-matches-history-length", "history-orders-contiguous-attempts", "history-excludes-final-attempt", "flaky-matches-attempt-outcomes", "case-identity-stable-across-runs", "execution-identity-distinguishes-executions", "attempt-identity-scoped-to-execution", "attachment-identity-scoped-to-parent", "document-identity-follows-emission", "coordinates-run-and-shard-identity", "respects-reserved-extension-ownership", "provenance-identities-are-distinct", "provenance-records-direct-sources", "assertion-failures-belong-to-attempt", "thread-ids-belong-to-attempt", "global-errors-belong-to-run", "global-error-merge-preserves-inputs"];
     public static void Need(bool condition, string reason) { if (!condition) throw new Exception(reason); }
     public static void Equal(object? actual, object? expected, string code)
     {
@@ -83,10 +83,11 @@ public static class Checks
         using var reader = new Newtonsoft.Json.JsonTextReader(new StringReader(Encoding.UTF8.GetString(bytes))) { DateParseHandling = Newtonsoft.Json.DateParseHandling.None };
         return JObject.Load(reader);
     }
-    public static void Validate(byte[] bytes) => ValidateSchema(Document, Decode(bytes));
+    public static void Validate(byte[] bytes) { var report = Decode(bytes); ValidateSchema(Document, report); CheckProvenanceIdentities(report); }
     private static void ValidateSchema(JsonSchema schema, JToken value)
     {
-        var result = schema.Evaluate(JsonNode.Parse(value.ToString(Newtonsoft.Json.Formatting.None)), new EvaluationOptions { OutputFormat = OutputFormat.List, RequireFormatValidation = true });
+        using var document = System.Text.Json.JsonDocument.Parse(value.ToString(Newtonsoft.Json.Formatting.None));
+        var result = schema.Evaluate(document.RootElement, new EvaluationOptions { OutputFormat = OutputFormat.List, RequireFormatValidation = true });
         Need(result.IsValid, "Schema validation failed: " + System.Text.Json.JsonSerializer.Serialize(result));
     }
     public static JObject Resolve(JObject node)
@@ -160,6 +161,7 @@ public static class Checks
     public static void Rule(string rule, Context context)
     {
         Need(Rules.Contains(rule), "Unimplemented rule: " + rule);
+        if (NewRule(rule, context)) return;
         if (rule == "case-identity-stable-across-runs")
         {
             Need(context.Repeated.Count >= 2, "Missing independent repeated runs");
